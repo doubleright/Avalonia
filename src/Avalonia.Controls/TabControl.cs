@@ -60,6 +60,8 @@ namespace Avalonia.Controls
         private static readonly FuncTemplate<IPanel> DefaultPanel =
             new FuncTemplate<IPanel>(() => new WrapPanel());
 
+        private ILogical _contentChild;
+
         /// <summary>
         /// Initializes static members of the <see cref="TabControl"/> class.
         /// </summary>
@@ -191,7 +193,11 @@ namespace Avalonia.Controls
         {
             if (presenter == ContentPart)
             {
-                throw new NotImplementedException();
+                if (_contentChild is not null)
+                    LogicalChildren.Remove(_contentChild);
+                _contentChild = child;
+                if (_contentChild is not null)
+                    LogicalChildren.Add(_contentChild);
             }
         }
 
