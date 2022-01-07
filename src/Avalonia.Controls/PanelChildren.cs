@@ -75,6 +75,8 @@ namespace Avalonia.Controls
         {
             if (count > 0)
             {
+                for (var i = index; i < count; ++i)
+                    ClearParent(this[i]);
                 base.RemoveRange(index, count);
                 _owner.InvalidateDueToChildrenChange();
             }
