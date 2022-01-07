@@ -226,8 +226,15 @@ namespace Avalonia.Controls.Presenters
             set => SetAndRaise(RecognizesAccessKeyProperty, ref _recognizesAccessKey, value);
         }
 
+        protected override int LogicalChildrenCount => Child is null ? 0 : 1;
         protected override int VisualChildrenCount => Child is null ? 0 : 1;
-        protected override event EventHandler VisualChildrenChanged;
+        protected override event EventHandler LogicalChildrenChanged;
+        
+        protected override event EventHandler VisualChildrenChanged
+        {
+            add => LogicalChildrenChanged += value;
+            remove => LogicalChildrenChanged -= value;
+        }
 
         /// <summary>
         /// Gets the host content control.
@@ -292,11 +299,16 @@ namespace Avalonia.Controls.Presenters
                 AddVisualChild(newChild);
             }
 
-            Host?.RegisterLogicalChild(this, newChild);
-            VisualChildrenChanged?.Invoke(this, EventArgs.Empty);
+            if (Host is not null)
+                Host?.RegisterLogicalChild(this, newChild);
+            else if (newChild is not null && newChild.LogicalParent is null)
+                ((ISetLogicalParent)newChild).SetParent(this);
+
+            LogicalChildrenChanged?.Invoke(this, EventArgs.Empty);
             _createdChild = true;
         }
 
+        protected override ILogical GetLogicalChild(int index) => Child ?? throw new ArgumentOutOfRangeException();
         protected override IVisual GetVisualChild(int index) => Child ?? throw new ArgumentOutOfRangeException();
 
         /// <inheritdoc/>
