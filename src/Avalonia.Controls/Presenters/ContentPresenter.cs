@@ -273,7 +273,7 @@ namespace Avalonia.Controls.Presenters
                 if (oldChild != null)
                 {
                     RemoveVisualChild(oldChild);
-                    if (Host is null && oldChild.LogicalParent == this)
+                    if (oldChild.LogicalParent == this)
                         ((ISetLogicalParent)oldChild).SetParent(null);
                     ((ISetInheritanceParent)oldChild).SetParent(oldChild.Parent);
                 }
@@ -301,12 +301,14 @@ namespace Avalonia.Controls.Presenters
                 AddVisualChild(newChild);
             }
 
-            if (Host is not null)
-                Host.RegisterLogicalChild(this, newChild);
-            else if (newChild is not null && newChild.LogicalParent is null)
-                ((ISetLogicalParent)newChild).SetParent(this);
+            Host?.RegisterLogicalChild(this, newChild);
 
-            LogicalChildrenChanged?.Invoke(this, EventArgs.Empty);
+            if (newChild is not null && newChild.LogicalParent is null)
+            {
+                ((ISetLogicalParent)newChild).SetParent(this);
+                LogicalChildrenChanged?.Invoke(this, EventArgs.Empty);
+            }
+
             _createdChild = true;
         }
 
@@ -463,7 +465,7 @@ namespace Avalonia.Controls.Presenters
             else if (Child != null)
             {
                 RemoveVisualChild(Child);
-                if (Host is null && Child.LogicalParent == this)
+                if (Child.LogicalParent == this)
                     ((ISetLogicalParent)Child).SetParent(null);
                 ((ISetInheritanceParent)Child).SetParent(Child.Parent);
                 Child = null;
