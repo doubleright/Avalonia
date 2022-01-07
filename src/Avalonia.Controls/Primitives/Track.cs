@@ -5,9 +5,9 @@
 
 using System;
 using Avalonia.Controls.Metadata;
-using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
+using Avalonia.LogicalTree;
 using Avalonia.Metadata;
 using Avalonia.Utilities;
 using Avalonia.VisualTree;
@@ -119,7 +119,7 @@ namespace Avalonia.Controls.Primitives
                 if (_thumb is not null)
                 {
                     _thumb.DragDelta -= ThumbDragged;
-                    LogicalChildren.Remove(_thumb);
+                    AddLogicalChild(_thumb);
                     RemoveVisualChild(_thumb);
                     _thumb = null;
                 }
@@ -128,7 +128,7 @@ namespace Avalonia.Controls.Primitives
                 {
                     _thumb = value;
                     _thumb.DragDelta += ThumbDragged;
-                    LogicalChildren.Add(_thumb);
+                    AddLogicalChild(_thumb);
                     AddVisualChild(_thumb);
                 }
 
@@ -149,7 +149,7 @@ namespace Avalonia.Controls.Primitives
 
                 if (_increaseButton is not null)
                 {
-                    LogicalChildren.Remove(_increaseButton);
+                    RemoveLogicalChild(_increaseButton);
                     RemoveVisualChild(_increaseButton);
                     _increaseButton = null;
                 }
@@ -157,7 +157,7 @@ namespace Avalonia.Controls.Primitives
                 if (value is not null)
                 {
                     _increaseButton = value;
-                    LogicalChildren.Add(_increaseButton);
+                    RemoveLogicalChild(_increaseButton);
                     AddVisualChild(_increaseButton);
                 }
 
@@ -178,7 +178,7 @@ namespace Avalonia.Controls.Primitives
 
                 if (_decreaseButton is not null)
                 {
-                    LogicalChildren.Remove(_decreaseButton);
+                    RemoveLogicalChild(_decreaseButton);
                     RemoveVisualChild(_decreaseButton);
                     _decreaseButton = null;
                 }
@@ -186,7 +186,7 @@ namespace Avalonia.Controls.Primitives
                 if (value is not null)
                 {
                     _decreaseButton = value;
-                    LogicalChildren.Add(_decreaseButton);
+                    AddLogicalChild(_decreaseButton);
                     AddVisualChild(_decreaseButton);
                 }
 
@@ -549,5 +549,8 @@ namespace Avalonia.Controls.Primitives
             PseudoClasses.Set(":vertical", o == Orientation.Vertical);
             PseudoClasses.Set(":horizontal", o == Orientation.Horizontal);
         }
+
+        private void AddLogicalChild(ILogical child) => ((ISetLogicalParent)child).SetParent(this);
+        private void RemoveLogicalChild(ILogical child) => ((ISetLogicalParent)child).SetParent(null);
     }
 }

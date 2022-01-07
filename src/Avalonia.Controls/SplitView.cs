@@ -317,7 +317,7 @@ namespace Avalonia.Controls
         /// </summary>
         public event EventHandler<EventArgs> PaneOpening;
 
-        protected override bool RegisterContentPresenter(IContentPresenter presenter)
+        protected override void RegisterContentPresenter(IContentPresenter presenter)
         {
             var result = base.RegisterContentPresenter(presenter);
 

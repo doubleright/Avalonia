@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls.Metadata;
+﻿using System;
+using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
@@ -18,11 +19,11 @@ namespace Avalonia.Controls
         private Point _switchStartPoint = new Point();
         private double _initLeft = -1;
         private bool _isDragging = false;
+        private ILogical _onChild;
+        private ILogical _offChild;
 
         static ToggleSwitch()
         {
-            OffContentProperty.Changed.AddClassHandler<ToggleSwitch>((x, e) => x.OffContentChanged(e));
-            OnContentProperty.Changed.AddClassHandler<ToggleSwitch>((x, e) => x.OnContentChanged(e));
             IsCheckedProperty.Changed.AddClassHandler<ToggleSwitch>((x, e) =>
             {
                 if ((e.NewValue != null) && (e.NewValue is bool val))
@@ -112,50 +113,36 @@ namespace Avalonia.Controls
             set { SetValue(OnContentTemplateProperty, value); }
         }
 
-        private void OffContentChanged(AvaloniaPropertyChangedEventArgs e)
+        protected override int VisualChildrenCount
         {
-            if (e.OldValue is ILogical oldChild)
+            get
             {
-                LogicalChildren.Remove(oldChild);
-            }
-
-            if (e.NewValue is ILogical newChild)
-            {
-                LogicalChildren.Add(newChild);
+                var result = base.VisualChildrenCount;
+                if (_onChild is not null)
+                    ++result;
+                if (_offChild is not null)
+                    ++result;
+                return result;
             }
         }
 
-        private void OnContentChanged(AvaloniaPropertyChangedEventArgs e)
+        protected override void RegisterContentPresenter(IContentPresenter presenter)
         {
-            if (e.OldValue is ILogical oldChild)
-            {
-                LogicalChildren.Remove(oldChild);
-            }
-
-            if (e.NewValue is ILogical newChild)
-            {
-                LogicalChildren.Add(newChild);
-            }
-        }
-
-        protected override bool RegisterContentPresenter(IContentPresenter presenter)
-        {
-            var result = base.RegisterContentPresenter(presenter);
+            base.RegisterContentPresenter(presenter);
 
             if (presenter.Name == "Part_OnContentPresenter")
-            {
                 OnContentPresenter = presenter;
-                result = true;
-            }
             else if (presenter.Name == "PART_OffContentPresenter")
-            {
                 OffContentPresenter = presenter;
-                result = true;
-            }
-
-            return result;
         }
 
+        protected override void RegisterLogicalChild(IContentPresenter presenter, ILogical child)
+        {
+            if (presenter == OnContentPresenter)
+                SetLogicalChild(ref _onChild, child);
+            else if (presenter == OffContentPresenter)
+                SetLogicalChild(ref _offChild, child);
+        }
 
         protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
         {
@@ -173,7 +160,17 @@ namespace Avalonia.Controls
                 UpdateKnobPos(IsChecked.Value);
             }
         }
-        
+
+        protected override void OnPropertyChanged<T>(AvaloniaPropertyChangedEventArgs<T> change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == OnContentProperty)
+                SetLogicalChild(ref _onChild, change.NewValue.GetValueOrDefault<ILogical>());
+            if (change.Property == OffContentProperty)
+                SetLogicalChild(ref _offChild, change.NewValue.GetValueOrDefault<ILogical>());
+        }
+
         private void KnobsPanel_PointerPressed(object sender, Input.PointerPressedEventArgs e)
         {
             _switchStartPoint = e.GetPosition(_switchKnob);
@@ -249,6 +246,22 @@ namespace Avalonia.Controls
                 {
                     Canvas.SetLeft(_knobsPanel, 0);
                 }
+            }
+        }
+
+        private void SetLogicalChild(ref ILogical field, ILogical child)
+        {
+            if (field != child)
+            {
+                if (field?.LogicalParent == this)
+                    ((ISetLogicalParent)field).SetParent(null);
+
+                field = child;
+
+                if (field is not null && field.LogicalParent is null)
+                    ((ISetLogicalParent)field).SetParent(this);
+
+                OnLogicalChildrenChanged(EventArgs.Empty);
             }
         }
     }

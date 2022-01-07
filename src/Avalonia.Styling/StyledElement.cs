@@ -362,7 +362,7 @@ namespace Avalonia
         /// Returns the specified logical child.
         /// </summary>
         /// <param name="index">The index of the logical child.</param>
-        protected virtual ILogical GetLogicalChild(int index) => throw new ArgumentOutOfRangeException();
+        protected virtual ILogical GetLogicalChild(int index) => throw new ArgumentOutOfRangeException(nameof(index));
 
         /// <summary>
         /// Detaches all styles from the element and queues a restyle.
@@ -509,28 +509,6 @@ namespace Avalonia
             DetachStylesFromThisAndDescendents(allStyles);
         }
 
-        protected virtual void LogicalChildrenCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    SetLogicalParent(e.NewItems!);
-                    break;
-
-                case NotifyCollectionChangedAction.Remove:
-                    ClearLogicalParent(e.OldItems!);
-                    break;
-
-                case NotifyCollectionChangedAction.Replace:
-                    ClearLogicalParent(e.OldItems!);
-                    SetLogicalParent(e.NewItems!);
-                    break;
-
-                case NotifyCollectionChangedAction.Reset:
-                    throw new NotSupportedException("Reset should not be signaled on LogicalChildren collection");
-            }
-        }
-
         /// <summary>
         /// Notifies child controls that a change has been made to resources that apply to them.
         /// </summary>
@@ -613,12 +591,11 @@ namespace Avalonia
                     element._dataContextUpdating = true;
                     element.OnDataContextBeginUpdate();
 
-                    var logicalChildren = element.LogicalChildren;
-                    var logicalChildrenCount = logicalChildren.Count;
+                    var logicalChildrenCount = element.LogicalChildrenCount;
 
                     for (var i = 0; i < logicalChildrenCount; i++)
                     {
-                        if (element.LogicalChildren[i] is StyledElement s &&
+                        if (element.GetLogicalChild(i) is StyledElement s &&
                             s.InheritanceParent == element &&
                             !s.IsSet(DataContextProperty))
                         {
@@ -685,12 +662,11 @@ namespace Avalonia
                 AttachedToLogicalTree?.Invoke(this, e);
             }
 
-            var logicalChildren = LogicalChildren;
-            var logicalChildrenCount = logicalChildren.Count;
+            var logicalChildrenCount = LogicalChildrenCount;
 
             for (var i = 0; i < logicalChildrenCount; i++)
             {
-                if (logicalChildren[i] is StyledElement child)
+                if (GetLogicalChild(i) is StyledElement child)
                 {
                     child.OnAttachedToLogicalTreeCore(e);
                 }
@@ -706,12 +682,11 @@ namespace Avalonia
                 OnDetachedFromLogicalTree(e);
                 DetachedFromLogicalTree?.Invoke(this, e);
 
-                var logicalChildren = LogicalChildren;
-                var logicalChildrenCount = logicalChildren.Count;
+                var logicalChildrenCount = LogicalChildrenCount;
 
                 for (var i = 0; i < logicalChildrenCount; i++)
                 {
-                    if (logicalChildren[i] is StyledElement child)
+                    if (GetLogicalChild(i) is StyledElement child)
                     {
                         child.OnDetachedFromLogicalTreeCore(e);
                     }
@@ -732,36 +707,6 @@ namespace Avalonia
         private void OnDataContextChangedCore(AvaloniaPropertyChangedEventArgs e)
         {
             OnDataContextChanged(EventArgs.Empty);
-        }
-
-        private void SetLogicalParent(IList children)
-        {
-            var count = children.Count;
-
-            for (var i = 0; i < count; i++)
-            {
-                var logical = (ILogical) children[i]!;
-                
-                if (logical.LogicalParent is null)
-                {
-                    ((ISetLogicalParent)logical).SetParent(this);
-                }
-            }
-        }
-
-        private void ClearLogicalParent(IList children)
-        {
-            var count = children.Count;
-
-            for (var i = 0; i < count; i++)
-            {
-                var logical = (ILogical) children[i]!;
-                
-                if (logical.LogicalParent == this)
-                {
-                    ((ISetLogicalParent)logical).SetParent(null);
-                }
-            }
         }
 
         private void DetachStyles()
@@ -818,14 +763,11 @@ namespace Avalonia
         {
             InvalidateStyles();
 
-            if (_logicalChildren is object)
-            {
-                var childCount = _logicalChildren.Count;
+            var childCount = LogicalChildrenCount;
 
-                for (var i = 0; i < childCount; ++i)
-                {
-                    (_logicalChildren[i] as StyledElement)?.InvalidateStylesOnThisAndDescendents();
-                }
+            for (var i = 0; i < childCount; ++i)
+            {
+                (GetLogicalChild(i) as StyledElement)?.InvalidateStylesOnThisAndDescendents();
             }
         }
 
@@ -833,14 +775,11 @@ namespace Avalonia
         {
             DetachStyles(styles);
 
-            if (_logicalChildren is object)
-            {
-                var childCount = _logicalChildren.Count;
+            var childCount = LogicalChildrenCount;
 
-                for (var i = 0; i < childCount; ++i)
-                {
-                    (_logicalChildren[i] as StyledElement)?.DetachStylesFromThisAndDescendents(styles);
-                }
+            for (var i = 0; i < childCount; ++i)
+            {
+                (GetLogicalChild(i) as StyledElement)?.DetachStylesFromThisAndDescendents(styles);
             }
         }
 
