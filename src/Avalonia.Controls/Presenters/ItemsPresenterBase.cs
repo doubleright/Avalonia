@@ -255,6 +255,7 @@ namespace Avalonia.Controls.Presenters
             Panel = ItemsPanel.Build();
             Panel.SetValue(TemplatedParentProperty, TemplatedParent);
 
+            ((ISetLogicalParent)Panel).SetParent(this);
             AddVisualChild(Panel);
 
             _createdPanel = true;

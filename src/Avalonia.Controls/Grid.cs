@@ -705,6 +705,8 @@ namespace Avalonia.Controls
             set => RowDefinitions.IsDirty = value;
         }
 
+        protected override event EventHandler VisualChildrenChanged;
+
         /// <summary>
         /// Lays out cells according to rows and columns, and creates lookup grids.
         /// </summary>
@@ -2375,7 +2377,7 @@ namespace Avalonia.Controls
                 _gridLinesRenderer = null;
             }
 
-            OnVisualChildrenChanged(EventArgs.Empty);
+            VisualChildrenChanged?.Invoke(this, EventArgs.Empty);
             return (_gridLinesRenderer);
         }
 

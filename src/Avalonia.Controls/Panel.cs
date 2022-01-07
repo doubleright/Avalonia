@@ -48,8 +48,16 @@ namespace Avalonia.Controls
             set { SetValue(BackgroundProperty, value); }
         }
 
+        protected override int LogicalChildrenCount => Children.Count;
         protected override int VisualChildrenCount => Children.Count;
-        protected override event EventHandler VisualChildrenChanged;
+
+        protected override event EventHandler LogicalChildrenChanged;
+        
+        protected override event EventHandler VisualChildrenChanged
+        {
+            add => LogicalChildrenChanged += value;
+            remove => LogicalChildrenChanged -= value;
+        }
 
         event EventHandler<ChildIndexChangedEventArgs> IChildIndexProvider.ChildIndexChanged
         {
@@ -115,8 +123,8 @@ namespace Avalonia.Controls
             _childIndexChanged?.Invoke(this, new ChildIndexChangedEventArgs(changed));
         }
 
+        protected override ILogical GetLogicalChild(int index) => Children[index];
         protected override IVisual GetVisualChild(int index) => Children[index];
-        protected virtual void OnVisualChildrenChanged(EventArgs e) => VisualChildrenChanged?.Invoke(this, e);
 
         internal new void AddVisualChild(IVisual child) => base.AddVisualChild(child);
         internal new void RemoveVisualChild(IVisual child) => base.RemoveVisualChild(child);
