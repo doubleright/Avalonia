@@ -273,6 +273,8 @@ namespace Avalonia.Controls.Presenters
                 if (oldChild != null)
                 {
                     RemoveVisualChild(oldChild);
+                    if (Host is null && oldChild.LogicalParent == this)
+                        ((ISetLogicalParent)oldChild).SetParent(null);
                     ((ISetInheritanceParent)oldChild).SetParent(oldChild.Parent);
                 }
             }
@@ -461,6 +463,8 @@ namespace Avalonia.Controls.Presenters
             else if (Child != null)
             {
                 RemoveVisualChild(Child);
+                if (Host is null && Child.LogicalParent == this)
+                    ((ISetLogicalParent)Child).SetParent(null);
                 ((ISetInheritanceParent)Child).SetParent(Child.Parent);
                 Child = null;
                 _recyclingDataTemplate = null;

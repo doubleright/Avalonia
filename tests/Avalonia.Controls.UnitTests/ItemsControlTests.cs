@@ -313,26 +313,6 @@ namespace Avalonia.Controls.UnitTests
         }
 
         [Fact]
-        public void LogicalChildren_Should_Not_Change_Instance_When_Template_Changed()
-        {
-            var target = new ItemsControl()
-            {
-                Template = GetTemplate(),
-            };
-
-            var before = ((ILogical)target).GetLogicalChildren().SingleOrDefault();
-
-            target.Template = null;
-            target.Template = GetTemplate();
-
-            var after = ((ILogical)target).GetLogicalChildren().SingleOrDefault();
-
-            Assert.NotNull(before);
-            Assert.NotNull(after);
-            Assert.Same(before, after);
-        }
-
-        [Fact]
         public void Should_Clear_Containers_When_ItemsPresenter_Changes()
         {
             var target = new ItemsControl
