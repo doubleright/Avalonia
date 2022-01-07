@@ -302,7 +302,7 @@ namespace Avalonia.Controls.Presenters
             }
 
             if (Host is not null)
-                Host?.RegisterLogicalChild(this, newChild);
+                Host.RegisterLogicalChild(this, newChild);
             else if (newChild is not null && newChild.LogicalParent is null)
                 ((ISetLogicalParent)newChild).SetParent(this);
 
