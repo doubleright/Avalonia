@@ -48,10 +48,10 @@ namespace Avalonia.Diagnostics.ViewModels
 
             protected override void Initialize(AvaloniaList<TreeNode> nodes)
             {
-                _subscription = _control.LogicalChildren.ForEachItem(
-                    (i, item) => nodes.Insert(i, new LogicalTreeNode((IAvaloniaObject)item, Owner)),
-                    (i, item) => nodes.RemoveAt(i),
-                    () => nodes.Clear());
+                ////_subscription = _control.LogicalChildren.ForEachItem(
+                ////    (i, item) => nodes.Insert(i, new LogicalTreeNode((IAvaloniaObject)item, Owner)),
+                ////    (i, item) => nodes.RemoveAt(i),
+                ////    () => nodes.Clear());
             }
         }
 
