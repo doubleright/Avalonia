@@ -60,7 +60,6 @@ namespace Avalonia
         private string? _name;
         private readonly Classes _classes = new Classes();
         private ILogicalRoot? _logicalRoot;
-        private IAvaloniaList<ILogical>? _logicalChildren;
         private IResourceDictionary? _resources;
         private Styles? _styles;
         private bool _styled;
@@ -93,6 +92,24 @@ namespace Avalonia
         /// Raised when the styled element is detached from a rooted logical tree.
         /// </summary>
         public event EventHandler<LogicalTreeAttachmentEventArgs>? DetachedFromLogicalTree;
+
+        /// <summary>
+        /// Raised when the logical children of the control change.
+        /// </summary>
+        event EventHandler? ILogical.LogicalChildrenChanged
+        {
+            add => LogicalChildrenChanged += value;
+            remove => LogicalChildrenChanged -= value;
+        }
+
+        /// <summary>
+        /// Raised when the logical children of the control change.
+        /// </summary>
+        protected virtual event EventHandler? LogicalChildrenChanged
+        {
+            add { }
+            remove { }
+        }
 
         /// <summary>
         /// Occurs when the <see cref="DataContext"/> property changes.
@@ -231,28 +248,6 @@ namespace Avalonia
         }
 
         /// <summary>
-        /// Gets the styled element's logical children.
-        /// </summary>
-        protected IAvaloniaList<ILogical> LogicalChildren
-        {
-            get
-            {
-                if (_logicalChildren == null)
-                {
-                    var list = new AvaloniaList<ILogical>
-                    {
-                        ResetBehavior = ResetBehavior.Remove,
-                        Validate = logical => ValidateLogicalChild(logical)
-                    };
-                    list.CollectionChanged += LogicalChildrenCollectionChanged;
-                    _logicalChildren = list;
-                }
-
-                return _logicalChildren;
-            }
-        }
-
-        /// <summary>
         /// Gets the <see cref="Classes"/> collection in a form that allows adding and removing
         /// pseudoclasses.
         /// </summary>
@@ -276,7 +271,7 @@ namespace Avalonia
         /// <summary>
         /// Gets the styled element's logical children.
         /// </summary>
-        IAvaloniaReadOnlyList<ILogical> ILogical.LogicalChildren => LogicalChildren;
+        int ILogical.LogicalChildrenCount => LogicalChildrenCount;
 
         /// <inheritdoc/>
         bool IResourceNode.HasResources => (_resources?.HasResources ?? false) ||
@@ -302,6 +297,11 @@ namespace Avalonia
         /// <inheritdoc/>
         IStyleHost? IStyleHost.StylingParent => (IStyleHost?)InheritanceParent;
 
+        /// <summary>
+        /// Gets the number of logical children of the control.
+        /// </summary>
+        protected virtual int LogicalChildrenCount => 0;
+
         /// <inheritdoc/>
         public virtual void BeginInit()
         {
@@ -322,6 +322,14 @@ namespace Avalonia
                 InitializeIfNeeded();
             }
         }
+
+        /// <summary>
+        /// Returns the specified logical child.
+        /// </summary>
+        /// <param name="index">
+        /// The index of the visual child; must be less than <see cref="LogicalChildrenCount"/>.
+        /// </param>
+        ILogical ILogical.GetLogicalChild(int index) => GetLogicalChild(index);
 
         /// <summary>
         /// Applies styling to the control if the control is initialized and styling is not
@@ -349,6 +357,12 @@ namespace Avalonia
 
             return _styled;
         }
+
+        /// <summary>
+        /// Returns the specified logical child.
+        /// </summary>
+        /// <param name="index">The index of the logical child.</param>
+        protected virtual ILogical GetLogicalChild(int index) => throw new ArgumentOutOfRangeException();
 
         /// <summary>
         /// Detaches all styles from the element and queues a restyle.
@@ -523,18 +537,15 @@ namespace Avalonia
         /// <param name="e">The event args.</param>
         protected virtual void NotifyChildResourcesChanged(ResourcesChangedEventArgs e)
         {
-            if (_logicalChildren is object)
+            var count = LogicalChildrenCount;
+
+            if (count > 0)
             {
-                var count = _logicalChildren.Count;
+                e ??= ResourcesChangedEventArgs.Empty;
 
-                if (count > 0)
+                for (var i = 0; i < count; ++i)
                 {
-                    e ??= ResourcesChangedEventArgs.Empty;
-
-                    for (var i = 0; i < count; ++i)
-                    {
-                        _logicalChildren[i].NotifyResourcesChanged(e);
-                    }
+                    GetLogicalChild(i).NotifyResourcesChanged(e);
                 }
             }
         }
